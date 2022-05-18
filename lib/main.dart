@@ -1,8 +1,10 @@
 import 'dart:isolate';
 
+import 'package:cp_helper/alarm_clock.dart';
 import 'package:cp_helper/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:flutter_alarm_clock/flutter_alarm_clock.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,18 +20,17 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late Future<List<Contests>> users;
+  late Future<List<Contests>> contests;
+  List<bool> _lights = [];
 
   @override
   void initState() {
     super.initState();
-    users = getContestList();
+    contests = getContestList();
   }
 
   @override
   Widget build(BuildContext context) {
-    bool _lights = false;
-    const int helloAlarmID = 0;
     return MaterialApp(
         home: Scaffold(
       appBar: AppBar(
@@ -38,33 +39,32 @@ class _MyAppState extends State<MyApp> {
       ),
       body: Center(
         child: FutureBuilder<List<Contests>>(
-            future: users,
+            future: contests,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return ListView.builder(
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
-                      return SwitchListTile(
+                      _lights.add(false);
+                      final now = DateTime.now();
+                      final today = DateTime(now.year, now.month, now.day);
+                      final startTime =
+                          DateTime.parse(snapshot.data![index].startTime);
+                      final aDate = DateTime(
+                          startTime.year, startTime.month, startTime.day);
+                      // // TODO : CHECK TIME ALSO
+                      // // If Time is greater than the contest dont create a alarm
+                      if (aDate == today) {
+                        FlutterAlarmClock.createAlarm(
+                            startTime.hour + 5, startTime.minute + 25,
+                            title: snapshot.data![index].name);
+                      }
+                      return ListTile(
                         title: Text(snapshot.data![index].name),
+                        subtitle: Text(
+                            "${snapshot.data![index].startTimeFormatted} - ${snapshot.data![index].endTimeFormatted}"),
+                        leading: Text(snapshot.data![index].site),
                         isThreeLine: true,
-                        value: _lights,
-                        onChanged: (bool value) {
-                          setState(() {
-                            _lights = value;
-                          });
-                          print("Here");
-                          AndroidAlarmManager.oneShot(
-                              const Duration(seconds: 1),
-                              helloAlarmID,
-                              printHello);
-                        },
-                        // leading: Text(snapshot.data![index].duration),
-                        subtitle:
-                            Text(snapshot.data![index].startTime.toString()),
-                        // trailing: Text(snapshot.data![index].site),
-                        // onTap: () {
-                        //   FlutterAlarmClock.createAlarm(23, 59);
-                        // }
                       );
                     });
               } else if (snapshot.hasError) {
@@ -82,4 +82,9 @@ void printHello() {
   final DateTime now = DateTime.now();
   final int isolateId = Isolate.current.hashCode;
   print("[$now] Hello, world! isolate=$isolateId function='$printHello'");
+}
+
+bool isCurrentDateInRange(DateTime startDate) {
+  final currentDate = DateTime.now();
+  return currentDate.isBefore(startDate);
 }
