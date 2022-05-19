@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 class Contests {
   String name;
   String site;
+  String image;
   String startTimeFormatted;
   String endTimeFormatted;
   String startTime;
@@ -15,6 +16,7 @@ class Contests {
 
   Contests({
     required this.name,
+    required this.image,
     required this.startTime,
     required this.endTime,
     required this.startTimeFormatted,
@@ -26,6 +28,7 @@ class Contests {
   factory Contests.fromJson(Map<String, dynamic> json) => Contests(
       name: json["name"],
       site: json["site"],
+      image: json["image"],
       startTimeFormatted: json["start_time"],
       endTimeFormatted: json["end_time"],
       startTime: json["start_time"],
@@ -34,6 +37,7 @@ class Contests {
 }
 
 Future<List<Contests>> getContestList() async {
+  // TODO : Change API To Clist https://clist.by/api/v2/contest/
   final response = await http.get(
     Uri.parse('https://kontests.net/api/v1/all'),
   );
@@ -57,15 +61,17 @@ Future<List<Contests>> getContestList() async {
           .format(DateTime.parse(newStartTime).toLocal());
       var formattedEndTime = DateFormat("E dd-MM hh:mm aa")
           .format(DateTime.parse(newEndTime).toLocal());
-
+      var siteImage = item["site"].toString().toLowerCase();
       Contests contest = Contests(
           name: item['name'],
           site: item["site"],
+          image: siteImage,
           startTimeFormatted: formattedStartTime,
           endTimeFormatted: formattedEndTime,
           startTime: newStartTime,
           endTime: newEndTime,
           duration: item["duration"]);
+
       contests.add(contest);
     }
     const preferedSites = ["CodeForces", "CodeChef", "LeetCode", "AtCoder"];

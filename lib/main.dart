@@ -33,48 +33,98 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
         home: Scaffold(
-      appBar: AppBar(
-        title: const Text('CP Calendar'),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: FutureBuilder<List<Contests>>(
-            future: contests,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return ListView.builder(
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      _lights.add(false);
-                      final now = DateTime.now();
-                      final today = DateTime(now.year, now.month, now.day);
-                      final startTime =
-                          DateTime.parse(snapshot.data![index].startTime);
-                      final aDate = DateTime(
-                          startTime.year, startTime.month, startTime.day);
-                      // // TODO : CHECK TIME ALSO
-                      // // If Time is greater than the contest dont create a alarm
-                      if (aDate == today) {
-                        FlutterAlarmClock.createAlarm(
-                            startTime.hour + 5, startTime.minute + 25,
-                            title: snapshot.data![index].name);
-                      }
-                      return ListTile(
-                        title: Text(snapshot.data![index].name),
-                        subtitle: Text(
-                            "${snapshot.data![index].startTimeFormatted} - ${snapshot.data![index].endTimeFormatted}"),
-                        leading: Text(snapshot.data![index].site),
-                        isThreeLine: true,
-                      );
-                    });
-              } else if (snapshot.hasError) {
-                return Text(snapshot.error.toString());
-              } else {
-                return const CircularProgressIndicator();
-              }
-            }),
-      ),
-    ));
+            appBar: AppBar(
+              title: const Text('CP Calendar'),
+              centerTitle: true,
+              actions: <Widget>[
+                IconButton(
+                  icon: const Icon(
+                    Icons.alarm,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    FlutterAlarmClock.showAlarms();
+                  },
+                )
+              ],
+            ),
+            body: Center(
+              child: FutureBuilder<List<Contests>>(
+                  future: contests,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return ListView.separated(
+                          separatorBuilder: (context, index) {
+                            return Divider();
+                          },
+                          itemCount: snapshot.data!.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == 0) {
+                              FlutterAlarmClock.createAlarm(20, 00,
+                                  title: "Daily LeetCode Practice");
+                              return const ListTile(
+                                title: Text(
+                                  "Daily Leetocde Question Practice",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 17),
+                                ),
+                                subtitle: Text(
+                                  "Daily 8:00 PM",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontStyle: FontStyle.italic),
+                                ),
+                                leading: CircleAvatar(
+                                  backgroundImage:
+                                      AssetImage("images/leetcode.png"),
+                                  backgroundColor: Colors.white,
+                                ),
+                                // isThreeLine: true,
+                              );
+                            }
+                            _lights.add(false);
+                            final now = DateTime.now();
+                            final today =
+                                DateTime(now.year, now.month, now.day);
+                            final startTime = DateTime.parse(
+                                snapshot.data![index - 1].startTime);
+                            final aDate = DateTime(
+                                startTime.year, startTime.month, startTime.day);
+                            // TODO : CHECK TIME ALSO
+                            // If Time is greater than the contest dont create a alarm
+                            if (aDate == today) {
+                              FlutterAlarmClock.createAlarm(
+                                  startTime.hour + 5, startTime.minute + 25,
+                                  title: snapshot.data![index - 1].name);
+                            }
+                            return ListTile(
+                              title: Text(
+                                snapshot.data![index - 1].name,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700, fontSize: 17),
+                              ),
+                              subtitle: Text(
+                                "${snapshot.data![index - 1].startTimeFormatted} - ${snapshot.data![index - 1].endTimeFormatted}",
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontStyle: FontStyle.italic),
+                              ),
+                              leading: CircleAvatar(
+                                backgroundImage: AssetImage(
+                                    "images/${snapshot.data![index - 1].image}.png"),
+                                backgroundColor: Colors.white,
+                              ),
+                              // isThreeLine: true,
+                            );
+                          });
+                    } else if (snapshot.hasError) {
+                      return Text(snapshot.error.toString());
+                    } else {
+                      return const CircularProgressIndicator();
+                    }
+                  }),
+            )));
   }
 }
 
